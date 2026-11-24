@@ -68,7 +68,7 @@ echo [4/5] Recompiling %GAME_XBE% into generated\game
 "%TOOLS%\xbe_recomp.exe" config\game.toml --xdk "%SDK%\xdk" >nul || goto :fail
 
 rem ---------------------------------------------------------------- Android
-echo [5/5] APK: the game code for arm64, 30 to 90 minutes the first time
+echo [5/5] APK: the game code for armeabi-v7a, 30 to 90 minutes the first time
 if not exist local.properties echo sdk.dir=%ANDROID_HOME:\=/%> local.properties
 rem GRADLE_ARGS: more for Gradle, as the release workflow's -PversionCode and -PversionName
 call gradlew.bat assembleRelease %GRADLE_ARGS% || goto :fail
