@@ -129,3 +129,4 @@ jobs:
           body_path: ${{ runner.temp }}/release-notes.md
           files: ShaolinMonks-${{ steps.version.outputs.name }}.apk
           make_latest: true
+          
