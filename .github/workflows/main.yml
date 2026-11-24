@@ -19,6 +19,11 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          
+      - name: Install CMake 3.31.6
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "cmake;3.31.6"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
