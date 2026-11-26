@@ -28,22 +28,18 @@ jobs:
 
       - name: Download ISO and Extract default.xbe
         env:
-          MEDIAFIRE_URL: ${{ secrets.ISO_URL }}
+          DIRECT_URL: ${{ secrets.ISO_URL }}
         run: |
-          if [ -z "$MEDIAFIRE_URL" ]; then
+          if [ -z "$DIRECT_URL" ]; then
             echo "ERRO: O Secret ISO_URL está vazio!"
             exit 1
           fi
           mkdir -p assets
-          DIRECT_URL=$(python3 -c "import os, re, urllib.request; req = urllib.request.Request(os.environ['MEDIAFIRE_URL'], headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}); html = urllib.request.urlopen(req).read().decode('utf-8', 'ignore'); m = re.search(r'href=\"(https?://download[^\"]+)\"', html); print(m.group(1) if m else '')")
-          if [ -z "$DIRECT_URL" ]; then
-            echo "ERRO: Não foi possível extrair o link direto do MediaFire."
-            exit 1
-          fi
           echo "Baixando ISO..."
           curl -L -A "Mozilla/5.0" "$DIRECT_URL" -o game.iso
           python3 -I tools/xdvdfs.py game.iso default.xbe assets/default.xbe
           rm -f game.iso
+
 
 
 
