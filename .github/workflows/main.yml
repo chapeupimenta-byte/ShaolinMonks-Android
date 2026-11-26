@@ -30,12 +30,16 @@ jobs:
         env:
           MEDIAFIRE_URL: ${{ secrets.ISO_URL }}
         run: |
+          if [ -z "$MEDIAFIRE_URL" ]; then
+            echo "ERRO: O Secret ISO_URL está vazio! Confira o nome em Settings -> Secrets."
+            exit 1
+          fi
+          pip install -q git+https://github.com
           mkdir -p assets
-          DIRECT_URL=$(curl -sL "$MEDIAFIRE_URL" | grep -oP 'https://download[0-9]+\.mediafire\.com/[^"]+' | head -n 1)
-          echo "Baixando ISO..."
-          curl -L "$DIRECT_URL" -o game.iso
+          mediafire-dl "$MEDIAFIRE_URL" -o game.iso
           python3 -I tools/xdvdfs.py game.iso default.xbe assets/default.xbe
           rm -f game.iso
+
 
       - name: Build Recompiler Tools & Recompile XBE
         run: |
