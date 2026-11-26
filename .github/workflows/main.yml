@@ -1,4 +1,4 @@
-name: Build Android ARMv7a
+name: Build Shaolin Monks ARMv7a
 
 on:
   push:
@@ -19,17 +19,38 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          
-      - name: Install CMake 3.31.6
+
+      - name: Install CMake 3.31.6 and Ninja
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "cmake;3.31.6"
+          sudo apt-get update && sudo apt-get install -y ninja-build clang curl grep
+          yes | $ANDROID_HOME/cmdline-tools/*/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          $ANDROID_HOME/cmdline-tools/*/bin/sdkmanager "cmake;3.31.6"
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Download ISO and Extract default.xbe
+        env:
+          MEDIAFIRE_URL: ${{ secrets.ISO_URL }}
+        run: |
+          mkdir -p assets
+          DIRECT_URL=$(curl -sL "$MEDIAFIRE_URL" | grep -oP 'https://download[0-9]+\.mediafire\.com/[^"]+' | head -n 1)
+          echo "Baixando ISO..."
+          curl -L "$DIRECT_URL" -o game.iso
+          python3 -I tools/xdvdfs.py game.iso default.xbe assets/default.xbe
+          rm -f game.iso
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
+      - name: Build Recompiler Tools & Recompile XBE
+        run: |
+          cmake -S tools -B out/build/android-tools -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          cmake --build out/build/android-tools
+          SDK=$(cat out/build/android-tools/sdk_dir.txt)
+          if ! grep -q "^\[symbols\]" config/game.toml; then
+            ./out/build/android-tools/xbe_symbols assets/default.xbe "$SDK/xdk" --out config/game.toml
+          fi
+          ./out/build/android-tools/xbe_recomp config/game.toml --xdk "$SDK/xdk"
+
+      - name: Build Android APK (armeabi-v7a)
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
